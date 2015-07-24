@@ -116,8 +116,12 @@
 #define MPU6050_RA_FIFO_R_W 0x74
 #define MPU6050_RA_WHO_AM_I 0x75
 
+#define GYROCLK_MAXVAL 0xFFFF
+#define GYRO_SECS_PER_CLK 2.5005722/(10^10)
 
 unsigned int curr_I2C_Addr;
+unsigned int gyroScale = 500;
+unsigned int accelScale= 2;
 
 void MPU_SetAddr( unsigned int I2C_Addr)
 {
@@ -155,9 +159,8 @@ void MPU_Init()
     //Disable FSync, 256Hz DLPF
     MPU_WriteReg_1(MPU6050_RA_CONFIG, 0x00);
     //Disable gyro self tests, scale of 500 degrees/s
-    MPU_WriteReg_1(MPU6050_RA_GYRO_CONFIG, 0b00001000);
     //Disable accel self tests, scale of +-2g, no DHPF
-    MPU_WriteReg_1(MPU6050_RA_ACCEL_CONFIG, 0x00);
+    MPU_Config(2,500);
     //Freefall threshold of |0mg|
     MPU_WriteReg_1(MPU6050_RA_FF_THR, 0x00);
     //Freefall duration limit of 0
@@ -264,6 +267,188 @@ unsigned int Rx1, Rx2;
     return (Rx1<<8) + Rx2;;
 }
 
+unsigned int MPU_Read_Z( void )
+{
+unsigned int Rx1, Rx2;
+    //MPU6050
 
+    i2c_Start(0);
+    i2c_Tx(curr_I2C_Addr);
+    i2c_Tx(MPU6050_RA_ACCEL_ZOUT_H);
+    i2c_Start(1); //ReStart
+    i2c_Tx(curr_I2C_Addr + 1);
+    Rx1 = i2c_Rx(0);
+    Rx2 = i2c_Rx(1);
+    i2c_Stop();
 
+    return (Rx1<<8) + Rx2;;
+}
 
+//Gyro Read Functions
+
+unsigned int MPU_Read_XGy( void )
+{
+unsigned int Rx1, Rx2;
+    //MPU6050
+
+    i2c_Start(0);
+    i2c_Tx(curr_I2C_Addr);
+    i2c_Tx(MPU6050_RA_GYRO_ZOUT_H);
+    i2c_Start(1); //ReStart
+    i2c_Tx(curr_I2C_Addr + 1);
+    Rx1 = i2c_Rx(0);
+    Rx2 = i2c_Rx(1);
+    i2c_Stop();
+
+    return (Rx1<<8) + Rx2;;
+}
+
+unsigned int MPU_Read_YGy( void )
+{
+unsigned int Rx1, Rx2;
+    //MPU6050
+
+    i2c_Start(0);
+    i2c_Tx(curr_I2C_Addr);
+    i2c_Tx(MPU6050_RA_GYRO_ZOUT_H);
+    i2c_Start(1); //ReStart
+    i2c_Tx(curr_I2C_Addr + 1);
+    Rx1 = i2c_Rx(0);
+    Rx2 = i2c_Rx(1);
+    i2c_Stop();
+
+    return (Rx1<<8) + Rx2;;
+}
+
+unsigned int MPU_Read_ZGy( void )
+{
+unsigned int Rx1, Rx2;
+    //MPU6050
+
+    i2c_Start(0);
+    i2c_Tx(curr_I2C_Addr);
+    i2c_Tx(MPU6050_RA_GYRO_ZOUT_H);
+    i2c_Start(1); //ReStart
+    i2c_Tx(curr_I2C_Addr + 1);
+    Rx1 = i2c_Rx(0);
+    Rx2 = i2c_Rx(1);
+    i2c_Stop();
+
+    return (Rx1<<8) + Rx2;;
+}
+
+/*
+ * function:    Configure the MPU Accelerometer and Gyro Scale, 
+ *                set global values for later access
+ * 
+ * parameters:  accel_scale - Accelerometer Scale. for the MPU6050, the following values are permitted (in g)
+ *              2, 4, 8, 16 (Default 2)
+ *              gyro_scale  - Gyroscope Scale. for the MPU6050, the following values are permitted (in deg/sec)
+ *              250, 500, 1000, 2000 (Default 500)
+ * 
+ * returns:     void.
+ */
+
+void MPU_Config(int accel_scale, int gyro_scale)
+{
+    short i,j;
+    
+    for(i=0;i<5;i++)
+        if(i>3) {
+            MPU_WriteReg_1(MPU6050_RA_ACCEL_CONFIG,0);
+            break;
+        }
+        else if(accel_scale=(2^(i+1))) {
+            MPU_WriteReg_1(MPU6050_RA_ACCEL_CONFIG,i<<3);
+            accelScale=accel_scale;
+            break;
+        }
+    
+    for(i=0;i<5;i++)
+        if(i>3) {
+            MPU_WriteReg_1(MPU6050_RA_GYRO_CONFIG,0b00001000);
+            break;
+        }
+        else if(gyro_scale==((2^(i+1))*125)) {
+            MPU_WriteReg_1(MPU6050_RA_ACCEL_CONFIG,i<<3);
+            gyroScale=gyro_scale;
+            break;
+        }    
+}
+
+/*
+ * function:    Convert raw accelerometer values to gs or m/s, using the current scale.
+ * 
+ * parameters:  accelval - Current raw accel value. 
+ *              g - Output selection. 0 gives m/s, 1 gives output in Gs.
+ * 
+ * returns:     Standardised float value in selected format
+ */
+
+float MPU_AccelConv(unsigned int accelval, unsigned int g){
+    
+    if(g==1)
+        return (accelval/(32768/accelScale));
+    else
+        return (accelval/(32768/accelScale))*(9.81);
+}
+
+/*
+ * function:    Convert raw gyro values to degress per second, using the current scale.
+ * 
+ * parameters:  Current raw gyro value. Output from MPU_Read_xGy
+ * 
+ * returns:     Standardised float value in degrees per second
+ */
+
+float MPU_GyroConv(unsigned int gyroval) {
+    return (gyroval/(32750/gyroScale));
+}
+
+/*
+ *function:      Convert gyro values of angular momentum to fixed degrees of movement.
+ *               To initialize, simply call with negative values of the respective axes and init values.
+ *
+ *parameters:    gyVal - Angular momentum in deg/sec, output of MPU_GyroConv
+ *              axis - The axis of measurement. 1-X, 2-Y, 3-Z
+ *              clk - A timer needs to be setup for continous runningand reset-on-overflow, to measure time for integration.
+ *                      Set constants GYROCLK_MAXVAL and GYRO_SECS_PER_CLK to their respective values,
+ *                          based on current frequency and bitsize of the timer. TIMEER REQUIRED.
+ *                      Ideally, the timer maxval is a multiple of the refresh rate of the gyro. 
+ *
+ *returns:       single float value of the current degree of turn of the axis specified.
+ */
+
+float MPU_GyroVal(float gyVal, int axis, unsigned int clk) {
+    static float XDeg=0, YDeg=0, ZDeg=0;
+    static unsigned int last_clk=0;    
+    
+    unsigned int diff=clk-last_clk;
+
+    if(axis<0)
+    {
+        if(0-axis==1)
+            return (XDeg=gyVal);
+        else if(0-axis==2)
+            return (YDeg=gyVal);
+        else if(0-axis==3)
+            return (ZDeg=gyVal);
+    }
+    
+    if(clk<last_clk)
+        diff = GYROCLK_MAXVAL+clk;
+    
+    switch(axis) {
+        case 1:
+            XDeg+=gyVal*GYRO_SECS_PER_CLK*diff;
+            return XDeg;
+        case 2:
+            YDeg+=gyVal*GYRO_SECS_PER_CLK*diff;
+            return YDeg;
+        case 3:
+            ZDeg+=gyVal*GYRO_SECS_PER_CLK*diff;
+            return ZDeg;
+        default:
+            return 0;
+    }
+}
