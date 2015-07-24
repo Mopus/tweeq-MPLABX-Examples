@@ -1,0 +1,437 @@
+Disassembly Listing for MX1Core
+Generated From:
+C:/+Allegro/PIC32Core/MX1Core.X/dist/default/production/MX1Core.X.production.elf
+Sep 29, 2014 4:24:25 PM
+
+---  C:/+Allegro/PIC32Core/MX1Core.X/CoreMain.c  --------------------------------------------------------
+1:                   /* 
+2:                    * File:   newmain.c
+3:                    * Author: MRush
+4:                    *
+5:                    * Created on December 2, 2013, 5:23 PM
+6:                    */
+7:                   
+8:                   #include <stdio.h>
+9:                   #include <stdlib.h>
+10:                  #include <p32xxxx.h>                // Processor defs
+11:                  #include <plib.h>
+12:                  #include <math.h>
+13:                  #include "HMain.h"
+14:                  
+15:                  
+16:                  
+17:                  //#define     OLD_CORE
+18:                  
+19:                  
+20:                  
+21:                      #pragma config FPLLMUL = MUL_20, FPLLIDIV = DIV_2, FPLLODIV = DIV_2
+22:                      #pragma config POSCMOD = HS, FNOSC = PRIPLL, FPBDIV = DIV_1
+23:                  
+24:                  //#pragma config FPLLMUL = MUL_20, FPLLIDIV = DIV_2, FPLLODIV = DIV_2
+25:                      #pragma config FWDTEN = OFF
+26:                  //    #pragma config POSCMOD = OFF, FNOSC = FRCPLL
+27:                  //    #pragma config FPBDIV = DIV_1, FSOSCEN = OFF
+28:                      #pragma config FSOSCEN = OFF
+29:                      #pragma config WDTPS = PS4
+30:                      #pragma config CP=OFF, BWP=OFF
+31:                      #pragma config FCKSM = CSDCMD
+32:                      #pragma config ICESEL   = ICS_PGx1      // ICE/ICD Comm Channel Select
+33:                      #pragma config JTAGEN = OFF
+34:                  
+35:                      //USB
+36:                      #pragma config FUSBIDIO = OFF
+37:                      #pragma config FVBUSONIO = OFF
+38:                  
+39:                      #define SYS_FREQ 				(40000000L)
+40:                  
+41:                  
+42:                  //#define PIC32MX2
+43:                  
+44:                  unsigned int g_count;
+45:                  
+46:                  #define  NOP() asm("NOP");
+47:                  
+48:                  //void  __attribute__((section("XCode"))) XCode( void );
+49:                  void  __attribute__((section("XCode"))) XCode( void );
+50:                  //void __attribute__((section("XCode2"))) INT0_INIT( void );
+51:                  void __attribute__((section("XCode2"))) INT0_INIT( void );
+52:                  void __attribute__((section("XCode2"))) Math_Itoa(int value, char* str, int radix);
+53:                  //int xx, yy;
+54:                  //#=================================================================================================
+55:                  //#=================================================================================================
+56:                  int __attribute__((section("XCodeMain"))) main( void ) {
+9D000EB4  27BDFFE8   ADDIU SP, SP, -24
+9D000ECC  AFBF0014   SW RA, 20(SP)
+57:                      int	pbClk;
+58:                      //pbClk = SYSTEMConfig(SYS_FREQ>>4, SYS_CFG_WAIT_STATES | SYS_CFG_PCACHE);
+59:                      //pbClk = SYSTEMConfig(SYS_FREQ>>4, SYS_CFG_WAIT_STATES | SYS_CFG_PCACHE);
+60:                      //(DEBUG_JTAGPORT_OFF);
+61:                  
+62:                      ANSELA = 0x0;	//All pin digital
+9D000E80  3C02BF88   LUI V0, -16504
+9D000E84  AC406000   SW ZERO, 24576(V0)
+63:                      ANSELB = 0x0;
+9D000E88  3C02BF88   LUI V0, -16504
+9D000E8C  AC406100   SW ZERO, 24832(V0)
+64:                  
+65:                      _TRISB13 = 1;
+9D000E90  3C03BF88   LUI V1, -16504
+9D000E94  8C646110   LW A0, 24848(V1)
+9D000E98  24020001   ADDIU V0, ZERO, 1
+9D000EA0  7C446B44   INS A0, V0, 13, 1
+9D000EA4  AC646110   SW A0, 24848(V1)
+66:                      U1RXRbits.U1RXR = 3; //SET RX to RPB13 > PIN 24
+9D000E9C  24060003   ADDIU A2, ZERO, 3
+9D000EA8  3C04BF81   LUI A0, -16511
+9D000EAC  8C85FA50   LW A1, -1456(A0)
+9D000EB8  7CC51804   INS A1, A2, 0, 4
+9D000EBC  AC85FA50   SW A1, -1456(A0)
+67:                      RPB15Rbits.RPB15R = 1; //SET RPB15R to TX > PIN 26
+9D000EC0  3C04BF81   LUI A0, -16511
+9D000EC4  8C85FB68   LW A1, -1176(A0)
+9D000ED0  7C451804   INS A1, V0, 0, 4
+9D000ED4  AC85FB68   SW A1, -1176(A0)
+68:                      U1BRG = (SYS_FREQ/17/(115200)); // calculate actual BAUD generate value.
+9D000EC8  24060014   ADDIU A2, ZERO, 20
+9D000ED8  3C04BF80   LUI A0, -16512
+9D000EDC  AC866040   SW A2, 24640(A0)
+69:                      //UARTSetDataRate(UART1, SYS_FREQ, 115200);
+70:                      U1MODE = UART_EN;
+9D000EE0  34058000   ORI A1, ZERO, -32768
+9D000EE4  3C04BF80   LUI A0, -16512
+9D000EE8  AC856000   SW A1, 24576(A0)
+71:                      U1STA = (UART_RX_ENABLE | UART_TX_ENABLE);
+9D000EB0  3C07BF80   LUI A3, -16512
+9D000EEC  24041400   ADDIU A0, ZERO, 5120
+9D000EF0  ACE46010   SW A0, 24592(A3)
+72:                  
+73:                      _TRISB5 = 1;
+9D000EF4  8C676110   LW A3, 24848(V1)
+9D000EF8  7C472944   INS A3, V0, 5, 1
+9D000EFC  AC676110   SW A3, 24848(V1)
+74:                      U2RXRbits.U2RXR = 1; //SET RX to RPB5
+9D000F00  3C03BF81   LUI V1, -16511
+9D000F04  8C67FA58   LW A3, -1448(V1)
+9D000F08  7C471804   INS A3, V0, 0, 4
+9D000F0C  AC67FA58   SW A3, -1448(V1)
+75:                      RPB10Rbits.RPB10R = 2; //SET RPB0R to TX
+9D000F10  3C02BF81   LUI V0, -16511
+9D000F14  8C43FB54   LW V1, -1196(V0)
+9D000F18  24070002   ADDIU A3, ZERO, 2
+9D000F1C  7CE31804   INS V1, A3, 0, 4
+9D000F20  AC43FB54   SW V1, -1196(V0)
+76:                      U2BRG = (SYS_FREQ/17/(115200));
+9D000F24  3C02BF80   LUI V0, -16512
+9D000F28  AC466240   SW A2, 25152(V0)
+77:                      //UARTSetDataRate(UART2, SYS_FREQ, 115200);
+78:                      U2MODE = UART_EN;
+9D000F2C  3C02BF80   LUI V0, -16512
+9D000F30  AC456200   SW A1, 25088(V0)
+79:                      U2STA = (UART_RX_ENABLE | UART_TX_ENABLE);
+9D000F34  3C02BF80   LUI V0, -16512
+9D000F38  0F400529   JAL INTEnableSystemMultiVectoredInt
+80:                  
+81:                      INTEnableSystemMultiVectoredInt();
+9D000F3C  AC446210   SW A0, 25104(V0)
+82:                  
+83:                      asm(" lui  $gp, 0xa000 ");
+9D000F40  0F4001C0   JAL INT0_INIT
+84:                      
+85:                      //asm(" nop ");
+86:                  #ifdef OLD_CORE
+87:                      INT4_INIT();
+88:                  #else
+89:                      INT0_INIT();
+9D000F44  3C1CA000   LUI GP, -24576
+90:                  #endif
+91:                      //asm(" nop ");
+92:                  
+93:                      //asm(" lui  $s0, 0x9d00 ");
+94:                      asm(" lui  $s3, 0x9d00 ");
+9D000F48  3C139D00   LUI S3, -25344
+95:                      asm(" lui  $s1, 0xbf80 ");
+9D000F4C  3C11BF80   LUI S1, -16512
+96:                      asm(" lui  $s2, 0xbf88 ");
+9D000F50  3C12BF88   LUI S2, -16504
+97:                  
+98:                      //asm(" nop ");
+99:                      //asm(" nop ");
+100:                     asm(" nop ");
+9D000F54  00000000   NOP
+101:                 
+102:                     asm(" nop ");
+9D000F58  00000000   NOP
+103:                     asm(" nop ");
+9D000F5C  00000000   NOP
+104:                     asm(" nop ");
+9D000F60  00000000   NOP
+105:                     asm(" nop ");
+9D000F64  00000000   NOP
+106:                 
+107:                     asm(" nop ");
+9D000F68  00000000   NOP
+108:                     asm(" nop ");
+9D000F6C  00000000   NOP
+109:                     asm(" nop ");
+9D000F70  00000000   NOP
+110:                     asm(" nop ");
+9D000F74  00000000   NOP
+111:                 
+112:                 
+113:                 
+114:                     asm(" nop ");
+9D000F78  00000000   NOP
+115:                     asm(" nop ");
+9D000F7C  00000000   NOP
+116:                     asm(" nop ");
+9D000F80  0F400940   JAL AGAINxxx
+117:                     XCode();
+9D000F84  00000000   NOP
+118:                     asm(" nop ");
+9D000F88  00000000   NOP
+119:                     asm(" nop ");
+9D000F8C  00000000   NOP
+120:                     return (EXIT_SUCCESS);
+121:                 }
+9D000F90  8FBF0014   LW RA, 20(SP)
+9D000F94  00001021   ADDU V0, ZERO, ZERO
+9D000F98  03E00008   JR RA
+9D000F9C  27BD0018   ADDIU SP, SP, 24
+122:                 //#=================================================================================================
+123:                 //#=================================================================================================
+124:                 
+125:                 #ifdef OLD_CORE
+126:                 //#=================================================================================================
+127:                 //#=================================================================================================
+128:                 void __attribute__((section("XCodeInt"))) __ISR( _EXTERNAL_4_VECTOR, ipl1) INT0Interrupt( void)
+129:                 { // input capture interrupt service routine
+130:                    //_RA1 = ~_RA1;
+131:                 //   Delayms(10);
+132:                    SoftReset();
+133:                    mINT4ClearIntFlag();
+134:                 }
+135:                 
+136:                 void __attribute__((section("XCodeIntPre"))) INT4_INIT( void )
+137:                 {
+138:                 //ConfigINT0(EXT_INT_PRI_1 | RISING_EDGE_INT | EXT_INT_ENABLE);
+139:                 
+140:                     _TRISB3 = 1;
+141:                     INT4Rbits.INT4R = 1; //SET int4 to RPB3
+142:                 
+143:                 ConfigINT4(EXT_INT_PRI_1 | FALLING_EDGE_INT | EXT_INT_ENABLE);
+144:                 }//INT0_INIT
+145:                 
+146:                 
+147:                 #else
+148:                 //#=================================================================================================
+149:                 //#=================================================================================================
+150:                 //#-------------------------------------------------------------------------------------------------
+151:                 //#=================================================================================================
+152:                 void __attribute__((section("XCodeIntPre"))) INT0_INIT( void )
+153:                 {
+154:                 //ConfigINT0(EXT_INT_PRI_1 | RISING_EDGE_INT | EXT_INT_ENABLE);
+155:                 ConfigINT0(EXT_INT_PRI_2 | FALLING_EDGE_INT | EXT_INT_ENABLE);
+9D000700  24020008   ADDIU V0, ZERO, 8
+9D000704  3C03BF88   LUI V1, -16504
+9D000708  AC621034   SW V0, 4148(V1)
+9D00070C  3C041C00   LUI A0, 7168
+9D000710  3C03BF88   LUI V1, -16504
+9D000714  AC641094   SW A0, 4244(V1)
+9D000718  3C040800   LUI A0, 2048
+9D00071C  3C03BF88   LUI V1, -16504
+9D000720  AC641098   SW A0, 4248(V1)
+9D000724  3C03BF88   LUI V1, -16504
+9D000728  24040001   ADDIU A0, ZERO, 1
+9D00072C  AC641004   SW A0, 4100(V1)
+9D000730  3C03BF88   LUI V1, -16504
+9D000734  AC601008   SW ZERO, 4104(V1)
+9D000738  3C03BF88   LUI V1, -16504
+9D00073C  AC621064   SW V0, 4196(V1)
+9D000740  3C03BF88   LUI V1, -16504
+9D000744  AC621068   SW V0, 4200(V1)
+156:                 }//INT0_INIT
+9D000748  03E00008   JR RA
+9D00074C  00000000   NOP
+157:                 //#-------------------------------------------------------------------------------------------------
+158:                 
+159:                 
+160:                 void __attribute__((section("XCodeInt"))) __ISR( _EXTERNAL_0_VECTOR, ipl2) INT0Interrupt( void)
+161:                 { // input capture interrupt service routine
+9D000800  415DE800   RDPGPR SP, SP
+9D000804  401A7000   MFC0 K0, EPC
+9D000808  401B6000   MFC0 K1, Status
+9D00080C  27BDFF98   ADDIU SP, SP, -104
+9D000810  AFBB0060   SW K1, 96(SP)
+9D000814  7C1B7844   INS K1, ZERO, 1, 15
+9D000818  377B0800   ORI K1, K1, 2048
+9D00081C  AFBA0064   SW K0, 100(SP)
+9D000820  409B6000   MTC0 K1, Status
+9D000824  AFBF0054   SW RA, 84(SP)
+9D000828  AFB90050   SW T9, 80(SP)
+9D00082C  AFB8004C   SW T8, 76(SP)
+9D000830  AFAF0048   SW T7, 72(SP)
+9D000834  AFAE0044   SW T6, 68(SP)
+9D000838  AFAD0040   SW T5, 64(SP)
+9D00083C  AFAC003C   SW T4, 60(SP)
+9D000840  AFAB0038   SW T3, 56(SP)
+9D000844  AFAA0034   SW T2, 52(SP)
+9D000848  AFA90030   SW T1, 48(SP)
+9D00084C  AFA8002C   SW T0, 44(SP)
+9D000850  AFA70028   SW A3, 40(SP)
+9D000854  AFA60024   SW A2, 36(SP)
+9D000858  AFA50020   SW A1, 32(SP)
+9D00085C  AFA4001C   SW A0, 28(SP)
+9D000860  AFA30018   SW V1, 24(SP)
+9D000864  AFA20014   SW V0, 20(SP)
+9D000868  AFA10010   SW AT, 16(SP)
+9D00086C  00001012   MFLO V0, 0
+9D000870  AFA2005C   SW V0, 92(SP)
+9D000874  00001810   MFHI V1, 0
+162:                    //_RA1 = ~_RA1;
+163:                 //   Delayms(10);
+164:                    SoftReset();
+9D000878  0F40050B   JAL SoftReset
+9D00087C  AFA30058   SW V1, 88(SP)
+165:                    mINT0ClearIntFlag();
+166:                 }
+167:                 #endif
+168:                 //#=================================================================================================
+169:                 //#=================================================================================================
+170:                 
+171:                 
+172:                 char m1[120], m2[120];
+173:                 
+174:                 //-----------------------------------------------==================================================
+175:                 //-----------------------------------------------==================================================
+176:                 //-----------------------------------------------==================================================
+177:                 //const  __attribute__((  address(0x9d0014a0) )) unsigned short arr[5] = {0x10, 0x20, 0x30, 0x40, 0x50};
+178:                 //int gg1, gg2, gg3;
+179:                 //unsigned char OS_Str_1[64];
+180:                 //#=================================================================================================
+181:                 void  __attribute__((section("XCode"))) XCode( void )
+182:                 {
+9D002500  27BDFFE8   ADDIU SP, SP, -24
+9D002504  AFBF0014   SW RA, 20(SP)
+183:                 asm( " Here: ");
+184:                 
+185:                 NOP();
+9D002508  00000000   NOP
+186:                 NOP();
+9D00250C  00000000   NOP
+187:                 NOP();
+9D002510  00000000   NOP
+188:                 
+189:                 //#include "Test_ASM.c"
+190:                 
+191:                 int a, b;
+192:                 
+193:                 a = -a;
+194:                     asm(" lhu  $t0, 0x00($s8) ");
+9D002514  97C80000   LHU T0, 0(S8)
+195:                 
+196:                     
+197:                     memcpy(m1, m2, 65);
+9D002518  3C04A000   LUI A0, -24576
+9D00251C  3C05A000   LUI A1, -24576
+9D002520  2484007C   ADDIU A0, A0, 124
+9D002524  24A50004   ADDIU A1, A1, 4
+9D002528  0F40047D   JAL 0x9D0011F4
+9D00252C  24060041   ADDIU A2, ZERO, 65
+198:                 
+199:                 TRISA = 0; NOP();
+9D002530  3C02BF88   LUI V0, -16504
+9D002534  AC406010   SW ZERO, 24592(V0)
+9D002538  00000000   NOP
+200:                 _TRISB0 = 0;
+9D00253C  3C02BF88   LUI V0, -16504
+9D002540  8C436110   LW V1, 24848(V0)
+9D002544  7C030004   INS V1, ZERO, 0, 1
+9D002548  AC436110   SW V1, 24848(V0)
+201:                 _TRISB1 = 0;
+9D00254C  8C436110   LW V1, 24848(V0)
+9D002550  7C030844   INS V1, ZERO, 1, 1
+9D002554  AC436110   SW V1, 24848(V0)
+202:                 AGAINxxx:
+203:                 asm(" AGAINxxx: ");
+204:                     //while(1)
+205:                     {
+206:                         _RB1 = 0;
+9D002558  3C02BF88   LUI V0, -16504
+9D00255C  8C436120   LW V1, 24864(V0)
+9D002564  7C030844   INS V1, ZERO, 1, 1
+9D002568  AC436120   SW V1, 24864(V0)
+207:                         //Delayms(300);
+208:                         _RB1 = 1;
+9D002560  24040001   ADDIU A0, ZERO, 1
+9D00256C  8C436120   LW V1, 24864(V0)
+9D002570  7C830844   INS V1, A0, 1, 1
+9D002574  0B400956   J AGAINxxx
+209:                         //Delayms(300);
+210:                     }
+211:                     asm(" j AGAINxxx ");
+9D002578  AC436120   SW V1, 24864(V0)
+212:                 
+213:                 //stuff that need to be put in
+214:                 // DONT ERASE
+215:                     SoftReset();
+9D00257C  0F40050B   JAL SoftReset
+9D002580  00000000   NOP
+216:                     WriteCoreTimer(0);
+217:                     unsigned int CalT = a * 20;
+218:                     while ( (unsigned int)(ReadCoreTimer()) < CalT ) {};
+219:                 // DONT ERASE
+220:                 }
+221:                 //#=================================================================================================
+222:                 int  __attribute__((section("XCode"))) xxxxx( int a , float ff)
+223:                 {
+9D002584  27BDFFE8   ADDIU SP, SP, -24
+9D002588  AFB00010   SW S0, 16(SP)
+9D00258C  00808021   ADDU S0, A0, ZERO
+9D002590  AFBF0014   SW RA, 20(SP)
+224:                 // DONT ERASE
+225:                     WriteCoreTimer(0);
+9D002594  0F400554   JAL WriteCoreTimer
+9D002598  00002021   ADDU A0, ZERO, ZERO
+226:                     unsigned int CalT = a * 20;
+9D00259C  24020014   ADDIU V0, ZERO, 20
+9D0025A0  72028002   MUL S0, S0, V0
+227:                     while ( (unsigned int)(ReadCoreTimer()) < CalT ) {};
+9D0025A4  0F400552   JAL ReadCoreTimer
+9D0025A8  00000000   NOP
+9D0025AC  0050102B   SLTU V0, V0, S0
+9D0025B0  1440FFFC   BNE V0, ZERO, 0x9D0025A4
+9D0025B4  8FBF0014   LW RA, 20(SP)
+228:                 // DONT ERASE
+229:                 }
+9D0025B8  8FB00010   LW S0, 16(SP)
+9D0025BC  03E00008   JR RA
+9D0025C0  27BD0018   ADDIU SP, SP, 24
+230:                 
+231:                 
+232:                 /*
+233:                 //#=================================================================================================
+234:                 //#=================================================================================================
+235:                 void __attribute__((section("XCode"))) __ISR( _INPUT_CAPTURE_4_VECTOR, ipl2) IC5_INT( void)
+236:                 //void __ISR(_INPUT_CAPTURE_1_VECTOR, ipl7 ) IC1Interrupt(void)
+237:                 { // input capture interrupt service routine
+238:                 
+239:                     mIC5ClearIntFlag();
+240:                 }
+241:                 //#=================================================================================================
+242:                 //#=================================================================================================
+243:                 
+244:                 
+245:                 //#=================================================================================================
+246:                 //#=================================================================================================
+247:                 void __attribute__((section("XCode"))) __ISR( _EXTERNAL_4_VECTOR, ipl2) INT4Interrupt( void)
+248:                 { // input capture interrupt service routine
+249:                    //_RA1 = ~_RA1;
+250:                    Delayms(10);
+251:                    SoftReset();
+252:                    mINT0ClearIntFlag();
+253:                 }
+254:                 //#=================================================================================================
+255:                 //#=================================================================================================
+256:                 */
+257:                 
+258:                 
